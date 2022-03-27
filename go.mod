@@ -1,4 +1,4 @@
-module github.com/reddi/agassi/app
+module github.com/reddi/agassi
 
 go 1.16
 

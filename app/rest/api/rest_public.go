@@ -15,6 +15,5 @@ type pubStore interface {
 }
 
 func (s *public) sayHello(w http.ResponseWriter, r *http.Request) {
-	d := s.dataService.Hello()
 	render.JSON(w, r, R.JSON{"data": s.dataService.Hello()})
 }

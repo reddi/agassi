@@ -18,12 +18,6 @@ type BoltDB struct {
 	db *bolt.DB
 }
 
-// BoltSite defines single site param
-type BoltSite struct {
-	FileName string // full path to boltdb
-	SiteID   string // ID of given site
-}
-
 // NewBoltDB makes persistent boltdb-based store. For each site new boltdb file created
 func NewBoltDB(options bolt.Options, dbFileName string) (*BoltDB, error) {
 	log.Printf("[INFO] bolt store for file %+v, options %+v", dbFileName, options)

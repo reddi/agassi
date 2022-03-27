@@ -74,6 +74,8 @@ func (s *Rest) routes() chi.Router {
 		rapi.Group(func(ropen chi.Router) {
 			ropen.Post("/player", s.pubRest.createPlayerCtrl)
 			ropen.Post("/coach", s.pubRest.createCoachCtrl)
+			ropen.Get("/players", s.pubRest.listPlayersCtrl)
+			ropen.Get("/coaches", s.pubRest.listCoachesCtrl)
 		})
 	})
 

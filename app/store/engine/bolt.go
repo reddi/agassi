@@ -89,6 +89,48 @@ func (b *BoltDB) CreateCoach(coach store.Coach) (coachID string, err error) {
 	return coach.ID, err
 }
 
+func (b *BoltDB) ListPlayers() (players []store.Player, err error) {
+	err = b.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(playersBucketName))
+		if bucket == nil {
+			return fmt.Errorf("no bucket %s", playersBucketName)
+		}
+		return bucket.ForEach(func(k, v []byte) error {
+			player := store.Player{}
+			if e := json.Unmarshal(v, &player); e != nil {
+				return fmt.Errorf("failed to unmarshal: %w", e)
+			}
+			players = append(players, player)
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return players, nil
+}
+
+func (b *BoltDB) ListCoaches() (coaches []store.Coach, err error) {
+	err = b.db.View(func(tx *bolt.Tx) error {
+		bucket := tx.Bucket([]byte(coachesBucketName))
+		if bucket == nil {
+			return fmt.Errorf("no bucket %s", coachesBucketName)
+		}
+		return bucket.ForEach(func(k, v []byte) error {
+			coach := store.Coach{}
+			if e := json.Unmarshal(v, &coach); e != nil {
+				return fmt.Errorf("failed to unmarshal: %w", e)
+			}
+			coaches = append(coaches, coach)
+			return nil
+		})
+	})
+	if err != nil {
+		return nil, err
+	}
+	return coaches, nil
+}
+
 func (b *BoltDB) AddReview(playerID string, review store.Review) (err error) {
 	return nil
 }

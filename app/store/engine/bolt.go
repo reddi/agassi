@@ -27,14 +27,13 @@ type BoltSite struct {
 // NewBoltDB makes persistent boltdb-based store. For each site new boltdb file created
 func NewBoltDB(options bolt.Options, dbFileName string) (*BoltDB, error) {
 	log.Printf("[INFO] bolt store for file %+v, options %+v", dbFileName, options)
-	result := &BoltDB{
-		db: &bolt.DB{},
-	}
 	db, err := bolt.Open(dbFileName, 0o600, &options) //nolint:gocritic //octalLiteral is OK as FileMode
 	if err != nil {
 		return nil, fmt.Errorf("failed to make boltdb for %s: %w", dbFileName, err)
 	}
-
+	result := &BoltDB{
+		db: db,
+	}
 	// make top-level buckets
 	topBuckets := []string{playersBucketName, coachesBucketName}
 	err = db.Update(func(tx *bolt.Tx) error {

@@ -13,6 +13,8 @@ import (
 	"github.com/go-chi/chi/v5"
 )
 
+const hardBodyLimit = 1024 * 64 // limit size of body
+
 // Rest is a rest access server
 type Rest struct {
 	DataService *service.DataStore
@@ -70,7 +72,8 @@ func (s *Rest) routes() chi.Router {
 	router.Route("/api/v1", func(rapi chi.Router) {
 		// open routes
 		rapi.Group(func(ropen chi.Router) {
-			ropen.Get("/hello", s.pubRest.sayHello)
+			ropen.Post("/player", s.pubRest.createPlayerCtrl)
+			ropen.Post("/coach", s.pubRest.createCoachCtrl)
 		})
 	})
 

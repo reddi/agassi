@@ -95,3 +95,18 @@ func (b *BoltDB) CreateCoach(coach store.Coach) (coachID string, err error) {
 	err = b.createUser(coachesBucketName, coach.ID, coach)
 	return coach.ID, err
 }
+
+func (b *BoltDB) AddReview(playerID string, review store.Review) (err error) {
+	return nil
+}
+
+func (b *BoltDB) ListReviews(playerID string) (reviews []store.Review, err error) {
+	return make([]store.Review, 0), nil
+}
+
+func (b *BoltDB) Close() error {
+	if err := b.db.Close(); err != nil {
+		return fmt.Errorf("can't close store: %w", err)
+	}
+	return nil
+}

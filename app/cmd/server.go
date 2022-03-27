@@ -2,17 +2,34 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 	log "github.com/go-pkgz/lgr"
+	"github.com/pkg/errors"
 	"github.com/reddi/agassi/app/rest/api"
+	"github.com/reddi/agassi/app/store/engine"
 	"github.com/reddi/agassi/app/store/service"
+	bolt "go.etcd.io/bbolt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 )
 
 type ServerCommand struct {
+	Store StoreGroup `group:"store" namespace:"store" env-namespace:"STORE"`
+
+	Site    string `long:"site" env:"SITE" default:"agassi" description:"site name"`
 	Port    int    `long:"port" env:"AGASSI_PORT" default:"8080" description:"port"`
 	Address string `long:"address" env:"AGASSI_ADDRESS" default:"" description:"listening address"`
+}
+
+// StoreGroup defines options group for store params
+type StoreGroup struct {
+	Type string `long:"type" env:"TYPE" description:"type of storage" choice:"bolt" choice:"rpc" default:"bolt"` // nolint
+	Bolt struct {
+		Path    string        `long:"path" env:"PATH" default:"./var" description:"parent directory for the bolt files"`
+		Timeout time.Duration `long:"timeout" env:"TIMEOUT" default:"30s" description:"bolt timeout"`
+	} `group:"bolt" namespace:"bolt" env-namespace:"BOLT"`
 }
 
 type serverApp struct {
@@ -47,8 +64,31 @@ func (s *ServerCommand) Execute(_ []string) error {
 	return nil
 }
 
+// makeDataStore creates store for all sites
+func (s *ServerCommand) makeDataStore() (result engine.Interface, err error) {
+	log.Printf("[INFO] make data store, type=%s", s.Store.Type)
+
+	switch s.Store.Type {
+	case "bolt":
+		if err = makeDirs(s.Store.Bolt.Path); err != nil {
+			return nil, errors.Wrap(err, "failed to create bolt store")
+		}
+		fileName := fmt.Sprintf("%s/%s.db", s.Store.Bolt.Path, s.Site)
+		result, err = engine.NewBoltDB(bolt.Options{Timeout: s.Store.Bolt.Timeout}, fileName)
+	default:
+		return nil, errors.Errorf("unsupported store type %s", s.Store.Type)
+	}
+	return result, errors.Wrap(err, "can't initialize data store")
+}
+
 func (s *ServerCommand) newServerApp(ctx context.Context) (*serverApp, error) {
-	dataService := &service.DataStore{}
+	storeEngine, err := s.makeDataStore()
+	if err != nil {
+		return nil, fmt.Errorf("failed to make data store engine: %w", err)
+	}
+	dataService := &service.DataStore{
+		Engine: storeEngine,
+	}
 	srv := &api.Rest{
 		DataService: dataService,
 	}
